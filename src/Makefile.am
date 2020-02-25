@@ -19,54 +19,50 @@ SS_COMMON_LIBS += -lbloom -lcork -lcorkipset
 endif
 SS_COMMON_LIBS += -lev -lsodium -lm
 
-bin_PROGRAMS = ss-local ss-tunnel ss-server ss-manager
+bin_PROGRAMS = ss-local ss-tunnel ss-server
+if !BUILD_WINCOMPAT
+bin_PROGRAMS += ss-manager
+endif
 
-sni_src = http.c \
-          tls.c \
-          rule.c
+acl_src = rule.c \
+          acl.c
 
 crypto_src = crypto.c \
              aead.c \
              stream.c \
-			 ppbloom.c \
+             ppbloom.c \
              base64.c
 
 plugin_src = plugin.c
 
-ss_local_SOURCES = utils.c \
-                   jconf.c \
-                   json.c \
-                   udprelay.c \
-                   cache.c \
-                   acl.c \
-                   netutils.c \
-                   local.c \
+common_src = utils.c \
+             jconf.c \
+             json.c \
+             udprelay.c \
+             cache.c \
+             netutils.c
+
+if BUILD_WINCOMPAT
+common_src += winsock.c
+endif
+
+ss_local_SOURCES = local.c \
+                   $(common_src) \
                    $(crypto_src) \
                    $(plugin_src) \
-                   $(sni_src)
+                   $(acl_src)
 
-ss_tunnel_SOURCES = utils.c \
-                    jconf.c \
-                    json.c \
-                    udprelay.c \
-                    cache.c \
-                    netutils.c \
-                    tunnel.c \
+ss_tunnel_SOURCES = tunnel.c \
+                    $(common_src) \
                     $(crypto_src) \
                     $(plugin_src)
 
-ss_server_SOURCES = utils.c \
-                    netutils.c \
-                    jconf.c \
-                    json.c \
-                    udprelay.c \
-                    cache.c \
-                    acl.c \
-                    resolv.c \
+ss_server_SOURCES = resolv.c \
                     server.c \
+                    $(common_src) \
                     $(crypto_src) \
                     $(plugin_src) \
-                    $(sni_src)
+                    ${acl_src}
 
 ss_manager_SOURCES = utils.c \
                      jconf.c \
@@ -99,8 +95,7 @@ ss_redir_SOURCES = utils.c \
                    udprelay.c \
                    redir.c \
                    $(crypto_src) \
-                   $(plugin_src) \
-                   $(sni_src)
+                   $(plugin_src)
 
 ss_redir_CFLAGS = $(AM_CFLAGS) -DMODULE_REDIR
 ss_redir_LDADD = $(SS_COMMON_LIBS)
@@ -114,7 +109,7 @@ libshadowsocks_libev_la_LDFLAGS = -version-info $(VERSION_INFO)
 libshadowsocks_libev_la_LIBADD = $(ss_local_LDADD)
 include_HEADERS = shadowsocks.h
 
-noinst_HEADERS = acl.h crypto.h stream.h aead.h json.h netutils.h redir.h server.h tls.h uthash.h \
-                 cache.h http.h local.h plugin.h resolv.h tunnel.h utils.h base64.h ppbloom.h \
-                 common.h jconf.h manager.h protocol.h rule.h socks5.h udprelay.h
+noinst_HEADERS = acl.h crypto.h stream.h aead.h json.h netutils.h redir.h server.h uthash.h \
+                 cache.h local.h plugin.h resolv.h tunnel.h utils.h base64.h ppbloom.h \
+                 common.h jconf.h manager.h rule.h socks5.h udprelay.h winsock.h
 EXTRA_DIST = ss-nat

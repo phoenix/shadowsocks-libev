@@ -1,7 +1,7 @@
 /*
  * crypto.c - Manage the global crypto
  *
- * Copyright (C) 2013 - 2017, Max Lv <max.c.lv@gmail.com>
+ * Copyright (C) 2013 - 2019, Max Lv <max.c.lv@gmail.com>
  *
  * This file is part of the shadowsocks-libev.
  *
@@ -33,6 +33,7 @@
 
 #include <stdint.h>
 #include <sodium.h>
+#include <mbedtls/version.h>
 #include <mbedtls/md5.h>
 
 #include "base64.h"
@@ -102,7 +103,12 @@ crypto_md5(const unsigned char *d, size_t n, unsigned char *md)
     if (md == NULL) {
         md = m;
     }
+#if MBEDTLS_VERSION_NUMBER >= 0x02070000
+    if (mbedtls_md5_ret(d, n, md) != 0)
+        FATAL("Failed to calculate MD5");
+#else
     mbedtls_md5(d, n, md);
+#endif
     return md;
 }
 
@@ -115,10 +121,10 @@ entropy_check(void)
 
     if ((fd = open("/dev/random", O_RDONLY)) != -1) {
         if (ioctl(fd, RNDGETENTCNT, &c) == 0 && c < 160) {
-            LOGI("This system doesn't provide enough entropy to quickly generate high-quality random numbers\n"
-                 "Installing the rng-utils/rng-tools or haveged packages may help.\n"
+            LOGI("This system doesn't provide enough entropy to quickly generate high-quality random numbers.\n"
+                 "Installing the rng-utils/rng-tools, jitterentropy or haveged packages may help.\n"
                  "On virtualized Linux environments, also consider using virtio-rng.\n"
-                 "The service will not start until enough entropy has been collected.");
+                 "The service will not start until enough entropy has been collected.\n");
         }
         close(fd);
     }
@@ -150,6 +156,7 @@ crypto_init(const char *password, const char *key, const char *method)
                 break;
             }
         if (m != -1) {
+            LOGI("Stream ciphers are insecure, therefore deprecated, and should be almost always avoided.");
             cipher_t *cipher = stream_init(password, key, method);
             if (cipher == NULL)
                 return NULL;
@@ -216,7 +223,7 @@ crypto_derive_key(const char *pass, uint8_t *key, size_t key_len)
 
     if (pass == NULL)
         return key_len;
-    if (mbedtls_md_setup(&c, md, 1))
+    if (mbedtls_md_setup(&c, md, 0))
         return 0;
 
     for (j = 0, addmd = 0; j < key_len; addmd++) {
@@ -366,7 +373,7 @@ crypto_parse_key(const char *base64, uint8_t *key, size_t key_len)
     rand_bytes(key, key_len);
     base64_encode(out_key, out_len, key, key_len);
     LOGE("Invalid key for your chosen cipher!");
-    LOGE("It requires a %zu-byte key encoded with URL-safe Base64", key_len);
+    LOGE("It requires a " SIZE_FMT "-byte key encoded with URL-safe Base64", key_len);
     LOGE("Generating a new random key: %s", out_key);
     FATAL("Please use the key above or input a valid key");
     return key_len;

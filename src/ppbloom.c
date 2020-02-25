@@ -1,7 +1,7 @@
 /*
  * ppbloom.c - Ping-Pong Bloom Filter for nonce reuse detection
  *
- * Copyright (C) 2013 - 2017, Max Lv <max.c.lv@gmail.com>
+ * Copyright (C) 2013 - 2019, Max Lv <max.c.lv@gmail.com>
  *
  * This file is part of the shadowsocks-libev.
  *
@@ -88,8 +88,7 @@ ppbloom_add(const void *buffer, int len)
     if (bloom_count[current] >= entries) {
         bloom_count[current] = 0;
         current              = current == PING ? PONG : PING;
-        bloom_free(ppbloom + current);
-        bloom_init(ppbloom + current, entries, error);
+        bloom_reset(ppbloom + current);
     }
 
     return 0;

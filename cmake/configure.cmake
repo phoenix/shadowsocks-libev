@@ -18,6 +18,9 @@ include(CheckCSourceCompiles)
 set(CONNECT_IN_PROGRESS "EINPROGRESS")
 set(CONNECT_IN_PROGRESS "EINPROGRESS" CACHE STRING "")
 
+if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
+    set(CMAKE_REQUIRED_INCLUDES "/usr/local/include" "/usr/include")
+endif ()
 
 check_include_files(dlfcn.h HAVE_DLFCN_H)
 check_include_files(ev.h HAVE_EV_H)
@@ -43,6 +46,8 @@ check_function_exists(memset HAVE_MEMSET)
 
 check_include_files(netdb.h HAVE_NETDB_H)
 check_include_files(netinet/in.h HAVE_NETINET_IN_H)
+check_include_files(netinet/tcp.h HAVE_NETINET_TCP_H)
+check_include_files(linux/tcp.h HAVE_LINUX_TCP_H)
 check_include_files(net/if.h HAVE_NET_IF_H)
 check_include_files(pcre.h HAVE_PCRE_H)
 check_include_files(pcre/pcre.h HAVE_PCRE_PCRE_H)
@@ -87,8 +92,7 @@ set(NDEBUG 1)
 set(PACKAGE ${PROJECT_NAME})
 set(PACKAGE_BUGREPORT max.c.lv@gmail.com)
 set(PACKAGE_NAME ${PROJECT_NAME})
-#set(PACKAGE_VERSION ${PROJECT_VERSION})
-set(PACKAGE_VERSION 3.0.2)
+set(PACKAGE_VERSION ${PROJECT_VERSION})
 set(PACKAGE_STRING "${PROJECT_NAME} ${PACKAGE_VERSION}")
 set(PACKAGE_TARNAME ${PROJECT_NAME})
 set(PACKAGE_URL "")
@@ -113,7 +117,7 @@ set(SELECT_TYPE_ARG5 "(struct timeval *)")
 set(STDC_HEADERS 1)
 
 
-check_include_files(sys/time.h time.h TIME_WITH_SYS_TIME)
+check_include_files("sys/time.h;time.h" TIME_WITH_SYS_TIME)
 
 
 # If the compiler supports a TLS storage class define it to that here

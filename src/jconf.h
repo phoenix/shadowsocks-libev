@@ -1,7 +1,7 @@
 /*
  * jconf.h - Define the config data structure
  *
- * Copyright (C) 2013 - 2017, Max Lv <max.c.lv@gmail.com>
+ * Copyright (C) 2013 - 2019, Max Lv <max.c.lv@gmail.com>
  *
  * This file is part of the shadowsocks-libev.
  * shadowsocks-libev is free software; you can redistribute it and/or modify
@@ -25,10 +25,9 @@
 #define MAX_PORT_NUM 1024
 #define MAX_REMOTE_NUM 10
 #define MAX_DSCP_NUM 64
-#define MAX_CONF_SIZE 128 * 1024
-#define MAX_DNS_NUM 4
+#define MAX_CONF_SIZE (128 * 1024)
 #define MAX_CONNECT_TIMEOUT 10
-#define MAX_REQUEST_TIMEOUT 60
+#define MIN_TCP_IDLE_TIMEOUT (24 * 3600)
 #define MIN_UDP_TIMEOUT 10
 
 #define DSCP_EF      0x2E
@@ -43,11 +42,6 @@
 #define TCP_ONLY     0
 #define TCP_AND_UDP  1
 #define UDP_ONLY     3
-
-typedef struct {
-    char *host;
-    char *port;
-} ss_addr_t;
 
 typedef struct {
     char *port;
@@ -66,6 +60,8 @@ typedef struct {
     ss_port_password_t port_password[MAX_PORT_NUM];
     char *remote_port;
     char *local_addr;
+    char *local_addr_v4;
+    char *local_addr_v6;
     char *local_port;
     char *password;
     char *key;
@@ -76,7 +72,6 @@ typedef struct {
     char *plugin_opts;
     int fast_open;
     int reuse_port;
-    int disable_sni;
     int nofile;
     char *nameserver;
     int dscp_num;
@@ -87,6 +82,8 @@ typedef struct {
     int mptcp;
     int ipv6_first;
     int no_delay;
+    char *workdir;
+    char *acl;
 } jconf_t;
 
 jconf_t *read_jconf(const char *file);

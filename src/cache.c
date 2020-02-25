@@ -1,7 +1,7 @@
 /*
  * cache.c - Manage the connection cache for UDPRELAY
  *
- * Copyright (C) 2013 - 2017, Max Lv <max.c.lv@gmail.com>
+ * Copyright (C) 2013 - 2019, Max Lv <max.c.lv@gmail.com>
  *
  * This file is part of the shadowsocks-libev.
  *
@@ -243,8 +243,6 @@ cache_key_exist(struct cache *cache, char *key, size_t key_len)
         tmp->ts = ev_time();
         HASH_ADD_KEYPTR(hh, cache->entries, tmp->key, key_len, tmp);
         return 1;
-    } else {
-        return 0;
     }
 
     return 0;

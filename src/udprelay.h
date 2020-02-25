@@ -1,7 +1,7 @@
 /*
  * udprelay.h - Define UDP relay's buffers and callbacks
  *
- * Copyright (C) 2013 - 2017, Max Lv <max.c.lv@gmail.com>
+ * Copyright (C) 2013 - 2019, Max Lv <max.c.lv@gmail.com>
  *
  * This file is part of the shadowsocks-libev.
  *
@@ -44,7 +44,9 @@
 
 #define MAX_UDP_PACKET_SIZE (65507)
 
-#define DEFAULT_PACKET_SIZE 1397 // 1492 - 1 - 28 - 2 - 64 = 1397, the default MTU for UDP relay
+#define PACKET_HEADER_SIZE (1 + 28 + 2 + 64)
+#define DEFAULT_PACKET_SIZE 1397 // 1492 - PACKET_HEADER_SIZE = 1397, the default MTU for UDP relay
+#define MAX_ADDR_HEADER_SIZE (1 + 256 + 2) // 1-byte atyp + 256-byte hostname + 2-byte port
 
 typedef struct server_ctx {
     ev_io io;
@@ -67,11 +69,10 @@ typedef struct server_ctx {
 
 #ifdef MODULE_REMOTE
 typedef struct query_ctx {
-    struct resolv_query *query;
     struct sockaddr_storage src_addr;
     buffer_t *buf;
     int addr_header_len;
-    char addr_header[384];
+    char addr_header[MAX_ADDR_HEADER_SIZE];
     struct server_ctx *server_ctx;
     struct remote_ctx *remote_ctx;
 } query_ctx_t;
@@ -82,8 +83,6 @@ typedef struct remote_ctx {
     ev_timer watcher;
     int af;
     int fd;
-    int addr_header_len;
-    char addr_header[384];
     struct sockaddr_storage src_addr;
 #ifdef MODULE_REMOTE
     struct sockaddr_storage dst_addr;
